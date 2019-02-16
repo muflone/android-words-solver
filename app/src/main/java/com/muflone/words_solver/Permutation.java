@@ -1,4 +1,4 @@
-package com.muflone.wordsolver;
+package com.muflone.words_solver;
 
 import java.io.StringBufferInputStream;
 import java.io.StreamTokenizer;

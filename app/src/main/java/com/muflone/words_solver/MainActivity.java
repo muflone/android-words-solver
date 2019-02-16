@@ -1,4 +1,4 @@
-package com.muflone.wordsolver;
+package com.muflone.words_solver;
 
 import android.content.res.AssetManager;
 import android.support.v7.app.AppCompatActivity;
@@ -15,9 +15,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
     EditText text_letters;

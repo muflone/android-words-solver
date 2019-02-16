@@ -1,4 +1,4 @@
-package com.muflone.wordsolver;
+package com.muflone.words_solver;
 
 import java.util.ArrayList;
 import java.util.Collection;
