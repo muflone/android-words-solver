@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
+import android.os.StrictMode;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -23,9 +24,15 @@ import com.google.common.base.Joiner;
 import com.muflone.words_solver.Itertools;
 import com.muflone.words_solver.R;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -50,6 +57,9 @@ public class Main extends AppCompatActivity {
         list_solutions.setAdapter(adapter_list);
 
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        /* Allow blocking calls from network in the UI thread */
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
     }
 
     private void initialize_ui()
@@ -87,6 +97,54 @@ public class Main extends AppCompatActivity {
         timings.addSplit("Starting computation");
         if (online_backend)
         {
+            URLConnection connection = null;
+            BufferedReader bufferedReader = null;
+            StringBuffer jsonStringBuffer = new StringBuffer();
+            try {
+                URL url = new URL("http://words-solver.apps.muflone.com/matches/" +
+                                  "1/222/" +
+                                  "italian" + "/" +
+                                  letters.toUpperCase() + "/" +
+                                  String.format("%02d", minimal_length) + "/");
+                connection = url.openConnection();
+                bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                /* Save all the received text in jsonStringBuffer */
+                String line;
+                while ((line = bufferedReader.readLine()) != null)
+                {
+                    jsonStringBuffer.append(line);
+                }
+
+                Log.d("Response", jsonStringBuffer.toString());
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    if (bufferedReader != null) {
+                        bufferedReader.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            timings.addSplit("Online backend: network transfer");
+
+            try {
+                /* Convert the jsonStringBuffer in a JSON array to extract items */
+                JSONObject jsonObject = new JSONObject(jsonStringBuffer.toString());
+                JSONArray jsonResults = jsonObject.getJSONArray("results");
+                /* Extract items from the JSON array */
+                for (int i = 0; i < jsonResults.length(); i++) {
+                    list_items.add(jsonResults.getString(i));
+                }
+            }
+            catch(Exception e)
+            {
+                Log.i("App", "Error parsing data" +e.getMessage());
+            }
+            timings.addSplit("Online backend: data process");
         }
         else
         {
