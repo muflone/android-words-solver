@@ -78,7 +78,11 @@ public class Main extends AppCompatActivity {
         String letters = text_letters.getText().toString().toUpperCase();
         int minimal_length = Integer.parseInt(text_length.getText().toString());
 
-        TimingLogger timings = new TimingLogger("words_solver", "button_solve_onClick");
+        /* To see the TimingLogger results you have to enable the debug using:
+           adb -s EMULATOR-xxxx shell setprop words_solver VERBOSE
+         */
+        TimingLogger timings = new TimingLogger("words_solver",
+                                                "button_solve_onClick");
 
         /* Hide virtual keyboard */
         InputMethodManager inputManager = (InputMethodManager)
@@ -115,7 +119,7 @@ public class Main extends AppCompatActivity {
                     jsonStringBuffer.append(line);
                 }
 
-                Log.d("Response", jsonStringBuffer.toString());
+                Log.d("words_solver", jsonStringBuffer.toString());
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -167,7 +171,7 @@ public class Main extends AppCompatActivity {
                 InputStreamReader inputStream = new InputStreamReader(assetManager.open("italian.dict"));
                 BufferedReader inputReader = new BufferedReader(inputStream);
                 for (String line; (line = inputReader.readLine()) != null; ) {
-                    Log.d("Response", line);
+                    Log.d("words_solver", line);
                     if (permutations.contains(line)) {
                         list_items.add(line);
                     }
