@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">Word  solver</string>
+    <string name="app_name">Words Solver</string>
+    <string name="action_preferences">Preferences</string>
 </resources>
