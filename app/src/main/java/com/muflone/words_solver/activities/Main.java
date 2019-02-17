@@ -1,14 +1,20 @@
 package com.muflone.words_solver.activities;
 
+import android.content.Context;
 import android.content.res.AssetManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.util.TimingLogger;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.common.base.Joiner;
+import com.muflone.words_solver.Itertools;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -38,52 +44,70 @@ public class Main extends AppCompatActivity {
 
     private void initialize_ui()
     {
-        text_letters = (EditText) findViewById(R.id.text_letters);
-        text_length = (EditText) findViewById(R.id.text_length);
-        list_solutions = (ListView) findViewById(R.id.list_solutions);
+        text_letters = findViewById(R.id.text_letters);
+        text_length = findViewById(R.id.text_length);
+        list_solutions = findViewById(R.id.list_solutions);
     }
 
 
     public void button_solve_onClick(View view)
     {
         String letters = text_letters.getText().toString().toUpperCase();
-        String[] letters_array = new String[letters.length()];
-        List<String> permutations = new ArrayList<>();
         int minimal_length = Integer.parseInt(text_length.getText().toString());
 
-        for (int j = 0; j < letters.length(); j++)
-        {
+        TimingLogger timings = new TimingLogger("words_solver", "button_solve_onClick");
+
+        /* Hide virtual keyboard */
+        InputMethodManager inputManager = (InputMethodManager)
+            getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
+                                             InputMethodManager.HIDE_NOT_ALWAYS);
+        /* Clear results list */
+        list_items.clear();
+        adapter_list.notifyDataSetChanged();
+
+        /* Too few letters */
+        if (letters.length() < minimal_length | minimal_length < 3)
+            return;
+
+        timings.addSplit("Starting computation");
+
+        // Use offline solver (slow)
+        String[] letters_array = new String[letters.length()];
+        List<String> permutations = new ArrayList<>();
+
+        for (int j = 0; j < letters.length(); j++) {
             letters_array[j] = letters.substring(j, j + 1);
         }
         for (int j = minimal_length; j <= letters.length(); j++)
-            for (List<String> products : Itertools.permutations(Arrays.asList(letters_array), j))
-            {
+            for (List<String> products : Itertools.permutations(Arrays.asList(letters_array), j)) {
                 permutations.add(Joiner.on("").join(products));
             }
+        timings.addSplit("Offline backend: permutations process");
 
-        list_items.clear();
-        AssetManager assetManager = getAssets();
-        InputStreamReader inputStream;
-        BufferedReader inputReader;
-        try
-        {
-            inputStream = new InputStreamReader(assetManager.open("italian.dict"));
-            inputReader = new BufferedReader(inputStream);
-            for (String line; (line = inputReader.readLine()) != null;)
-            {
-                line = line.toUpperCase();
-                if (permutations.contains(line))
-                {
-                    System.out.println(line);
+        ArrayList<String> dictionary = new ArrayList<>();
+        try {
+            AssetManager assetManager = getAssets();
+            InputStreamReader inputStream = new InputStreamReader(assetManager.open("italian.dict"));
+            BufferedReader inputReader = new BufferedReader(inputStream);
+            for (String line; (line = inputReader.readLine()) != null; ) {
+                Log.d("Response", line);
+                if (permutations.contains(line)) {
                     list_items.add(line);
                 }
             }
             inputReader.close();
             inputStream.close();
-            adapter_list.notifyDataSetChanged();
-        } catch (IOException e) {
+        } catch (IOException e)
+        {
             e.printStackTrace();
         }
+        timings.addSplit("Offline backend: dictionary compare");
+
+        timings.dumpToLog();
+        adapter_list.notifyDataSetChanged();
+        Toast.makeText(this,  list_items.size() + " solutions found", Toast.LENGTH_SHORT).show();
         return;
     }
 }
