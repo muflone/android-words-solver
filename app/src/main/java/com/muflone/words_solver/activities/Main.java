@@ -1,4 +1,4 @@
-package com.muflone.words_solver;
+package com.muflone.words_solver.activities;
 
 import android.content.res.AssetManager;
 import android.support.v7.app.AppCompatActivity;
@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class Main extends AppCompatActivity {
     EditText text_letters;
     EditText text_length;
     ListView list_solutions;
